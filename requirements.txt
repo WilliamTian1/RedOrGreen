@@ -6,6 +6,7 @@ transformers
 torch
 peft
 accelerate
+datasets
 mlflow
 pytest
 pyyaml
