@@ -1,79 +1,40 @@
-# Sector-Aware Earnings Analyzer (CLI)
+# Earnings Sentiment Analyzer
 
-End-to-end, production-lean command-line project combining finance-domain transformers (FinBERT), simple market features, and a supervised classifier to predict next-day stock moves from brief earnings snippets.
+Disclaimer: Don't use this for actual trading! It's meant to demonstrate ML engineering practices, not produce alpha.
+
+This project analyzes earnings-related text snippets and predicts whether a stock might go up or down the next day. It combines sentiment analysis from a finance-tuned language model with market data to make predictions.
 
 ## Features
 
-- Transformers: FinBERT sentiment (label, confidence, logits) with offline heuristic fallback
-- Optional LoRA/PEFT fine-tune (skips gracefully without GPU)
-- Ingestion: parse "TICKER: text", static ticker→sector map (CSV), minimal `yfinance` history
-- Features: sector one-hot, sentiment logits + score, 5-day log return, 5-day realized vol
-- Models: Logistic Regression (default) or Random Forest (fast, small)
-- Tracking: MLflow experiment, params/metrics/artifacts; optional W&B mirroring
-- CLI: low-latency analyzer for single snippets
-- Reproducibility: seeds, config-driven, offline sample data included
-- Stubs: FastAPI schemas, Kafka/Redis consumers, ONNX export placeholder
+- **FinBERT sentiment analysis** with keyword fallback for offline use
+- **Stock sector mapping** via CSV lookup (30+ popular stocks)
+- **Price features** from Yahoo Finance (5-day returns & volatility)
+- **Simple classifier** (logistic regression or random forest)
+- **MLflow experiment tracking** with metrics, plots, and model artifacts
+- **Command-line interface** for single-snippet predictions
+- **Offline mode** - works without internet using sample data
+- **Optional LoRA fine-tuning** (GPU required, auto-skips if unavailable)
+- **Reproducible** with fixed seeds and config-driven behavior
+- **Extensible** with API stubs for FastAPI, Kafka/Redis, ONNX export
 
-## Repository layout
-
-```
-.
-├─ app/
-│  ├─ cli/
-│  │  └─ analyze.py              # CLI: sentiment + features → predict
-│  ├─ data/
-│  │  ├─ sample_earnings.jsonl   # tiny offline dataset
-│  │  └─ ticker_sector_map.csv   # ticker, company, sector mapping
-│  ├─ features/
-│  │  └─ build_features.py       # sentiment logits + sector one-hot + price stats
-│  ├─ ingest/
-│  │  ├─ load_text.py            # parse "TICKER: text"; load jsonl
-│  │  └─ market_data.py          # yfinance helpers (offline fallback)
-│  ├─ models/
-│  │  ├─ finbert_infer.py        # HF pipeline wrapper w/ offline heuristic
-│  │  ├─ train_classifier.py     # sklearn model train/eval, MLflow
-│  │  ├─ lora_finetune.py        # optional LoRA (GPU), graceful skip
-│  │  └─ persist.py              # save/load model + preprocessors + schema
-│  ├─ pipeline.py                # orchestrates end-to-end run
-│  ├─ serve/
-│  │  └─ export_onnx.py          # ONNX export stub
-│  ├─ infra/
-│  │  └─ streaming_stubs.py      # Kafka/Redis consumer stubs
-│  ├─ api/
-│  │  └─ schemas.py              # Pydantic models for future FastAPI
-│  └─ utils/
-│     ├─ config.py               # config/env + seed setup
-│     ├─ logging.py              # structured logging via rich
-│     └─ metrics.py              # plots (confusion, ROC) + metric helpers
-├─ artifacts/                    # saved models/plots/schemas
-├─ tests/
-│  ├─ test_cli.py
-│  ├─ test_sector_map.py
-│  └─ test_features.py
-├─ config.yaml                   # hyperparams, flags, paths
-├─ requirements.txt
-├─ README.md
-└─ .gitignore
-```
-
-## Quickstart
+## How To
 
 ```bash
-# 1) Create and activate a virtualenv
+# Set up a virtual environment (recommended)
 python -m venv venv
-source venv/bin/activate      # Windows (PowerShell): .\venv\Scripts\Activate.ps1
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 2) Install dependencies
+# Install everything
 pip install -r requirements.txt
 
-# 3) Train (CPU-friendly; small sample)
-python -m app.pipeline --use_lora=false --limit_samples=0
+# Train the model on the sample data
+python -m app.pipeline --use_lora=false
 
-# 4) Analyze a single snippet
+# Try it out
 python -m app.cli.analyze "AAPL: guidance raised for Q4"
 ```
 
-Example output:
+You'll see something like:
 
 ```
 Sector: Technology
@@ -81,123 +42,191 @@ Sentiment: Positive (0.91)
 Predicted Next-Day Move: UP (0.67)
 ```
 
-## Architecture
+## Data
 
+The system comes with 18 sample earnings snippets in `app/data/sample_earnings.jsonl`. Each one looks like:
+
+```json
+{
+  "ticker": "AAPL",
+  "text": "iPhone demand exceeded expectations in Q3",
+  "label": "UP"
+}
 ```
-[ingest] -> [FinBERT sentiment] -> [features: sector + price] -> [classifier]
-                               \-> [MLflow params/metrics/artifacts]
-                                         \
-                                          -> [CLI inference]
+
+There's also a mapping file (`app/data/ticker_sector_map.csv`) that maps stock symbols to sectors:
+
+```csv
+ticker,company,sector
+AAPL,Apple Inc.,Technology
+MSFT,Microsoft Corp.,Technology
+JPM,JPMorgan Chase & Co.,Financials
 ```
 
-## Configuration & environment
+## Methodologies
 
-`config.yaml` (excerpt):
+### The Pipeline (`app/pipeline.py`)
+
+This is the main training script. It:
+
+- Loads the sample data
+- Runs each text snippet through FinBERT to get sentiment
+- Looks up each ticker's sector
+- Downloads recent price data from Yahoo Finance (or skips if offline)
+- Combines everything into a feature matrix
+- Trains a simple classifier (logistic regression by default)
+- Saves everything to the `artifacts/` folder
+- Logs metrics to MLflow
+
+### The CLI (`app/cli/analyze.py`)
+
+This loads the trained model and applies it to new text. If you haven't trained a model yet, it automatically runs a quick training session first.
+
+### FinBERT Sentiment (`app/models/finbert_infer.py`)
+
+This wraps the HuggingFace FinBERT model. The interesting part is the fallback - if the model can't load (no internet, missing dependencies, etc.), it uses simple keyword matching:
+
+- Positive words: "beat", "exceed", "strong", "raised", "record", "surprise", "profit"
+- Negative words: "miss", "weak", "cut", "lowered", "loss", "delay", "probe"
+
+### Feature Building (`app/features/build_features.py`)
+
+For each snippet, this creates:
+
+- 3 sentiment logits (negative, neutral, positive probabilities)
+- 1 sentiment confidence score
+- 1 five-day stock return
+- 1 five-day volatility measure
+- Several sector dummy variables (one-hot encoded)
+
+Everything gets standardized before training.
+
+## Configuration
+
+The `config.yaml` file controls most behavior:
 
 ```yaml
-seed: 42
-use_lora: false
-use_wandb: false
-experiment_name: earnings-analyzer
-mlflow_tracking_uri: ./mlruns
-artifacts_dir: artifacts
+seed: 42 # For reproducible results
+use_lora: false # LoRA fine-tuning (needs GPU)
+use_wandb: false # Weights & Biases logging
+yfinance_offline: false # Skip price data downloads
+
 features:
   include_price_features: true
   price_lookback_days: 5
-  sector_one_hot: true
+
 model:
-  type: logistic_regression
+  type: logistic_regression # or random_forest
   logistic_regression:
     C: 1.0
     penalty: l2
-    solver: liblinear
-    max_iter: 1000
-  random_forest:
-    n_estimators: 200
-    max_depth: 6
 ```
 
-Environment variables (override config):
+You can also use environment variables:
 
-- `USE_LORA=true|false`
-- `USE_WANDB=true|false`
-- `MLFLOW_TRACKING_URI=./mlruns` (or another local/remote URI)
-- `YFINANCE_OFFLINE=true` (forces dummy price features)
-- `TRANSFORMERS_OFFLINE=1` and/or `FINBERT_OFFLINE=true` (skip model downloads; use heuristic)
+- `YFINANCE_OFFLINE=true` - Skip price downloads
+- `FINBERT_OFFLINE=true` - Use keyword fallback instead of FinBERT
+- `USE_LORA=true` - Enable LoRA fine-tuning
 
-## Offline modes
+## Offline mode
 
-- If network is unavailable, pipeline/CLI runs with:
-  - Sample data from `app/data/sample_earnings.jsonl`
-  - Heuristic sentiment (when FinBERT model is not available)
-  - Dummy price features if `yfinance` fails or `YFINANCE_OFFLINE=true`
-- The CLI auto-bootstraps training if artifacts are missing (runs a quick local train, then predicts).
+The whole system works without internet. Set `YFINANCE_OFFLINE=true` and `FINBERT_OFFLINE=true`, and it will:
 
-## Modeling
+- Use the bundled sample data
+- Apply keyword-based sentiment analysis
+- Use dummy price features (all zeros)
 
-- Baseline: LogisticRegression (liblinear) on standardized features
-- Alternate: RandomForestClassifier (limited trees/depth for speed)
-- Train/test split with fixed seed; metrics: accuracy, F1, ROC-AUC
+This is handy for demos or when you don't want to download large models.
 
-## Experiment tracking
+## LoRA fine-tuning (GPU only)
 
-- MLflow experiment: `earnings-analyzer` under `./mlruns`
-- Logged:
-  - Params: model type, LR/RF hyperparams, use_lora, feature set
-  - Metrics: `accuracy`, `f1`, `roc_auc`
-  - Artifacts: `artifacts/confusion_matrix.png`, `artifacts/roc_curve.png`, optional `feature_importance.json`
-
-Start MLflow UI locally:
-
-```bash
-mlflow ui --backend-store-uri ./mlruns --port 5000
-```
-
-Then open `http://localhost:5000`.
-
-## LoRA fine-tuning (optional)
-
-- Requires GPU. If not available, it skips automatically.
+By default, the system uses FinBERT as-is without any fine-tuning. However, if you have a GPU and want to experiment with adapting FinBERT to financial text, you can enable LoRA (Low-Rank Adaptation) fine-tuning:
 
 ```bash
 pip install datasets
 python -m app.pipeline --use_lora=true
 ```
 
-This performs a tiny, demonstrative LoRA run on a small finance dataset and logs to MLflow.
+**What happens when you enable LoRA:**
 
-## Tests
+- Downloads the Financial PhraseBank dataset (academic financial sentiment data)
+- Applies LoRA adapters to the pre-trained FinBERT model
+- Runs a brief fine-tuning session (1 epoch, very small)
+- Saves the adapted model to `artifacts/lora/adapter`
+- Logs before/after metrics to MLflow
+
+**Important notes:**
+
+- Requires a CUDA-compatible GPU
+- If no GPU is detected, it automatically skips and continues with base FinBERT
+- This is mostly for demonstration - the training is minimal
+- The base FinBERT model (`yiyanghkust/finbert-tone`) is already trained on financial text
+
+You can also enable it via config:
+
+```yaml
+use_lora: true
+```
+
+Or environment variable:
+
+```bash
+USE_LORA=true python -m app.pipeline
+```
+
+## Experiment tracking
+
+The system logs everything to MLflow automatically. After training, you can start the MLflow UI:
+
+```bash
+mlflow ui --backend-store-uri ./mlruns --port 5000
+```
+
+Then open http://localhost:5000 to see your experiments, metrics, and saved artifacts.
+
+## Testing
+
+Run the tests with:
 
 ```bash
 pytest -q
 ```
 
-Includes:
+There are three simple tests:
 
-- Sector map unit test
-- Feature builder unit test
-- CLI smoke test
+- Check that ticker-to-sector mapping works
+- Verify that feature building produces the right dimensions
+- Make sure the CLI runs without crashing
 
-## Artifacts
+## What gets saved
 
-After training, `artifacts/` contains:
+After training, the `artifacts/` folder contains:
 
-- `sk_model.pkl` — trained sklearn classifier
-- `sector_encoder.pkl`, `scaler.pkl` — preprocessors
-- `feature_schema.json`, `label_encoder.json`
-- `confusion_matrix.png`, `roc_curve.png`
+- `sk_model.pkl` - The trained classifier
+- `sector_encoder.pkl` - One-hot encoder for sectors
+- `scaler.pkl` - Feature standardization
+- `feature_schema.json` - List of feature names
+- `confusion_matrix.png` - Classification results visualization
+- `roc_curve.png` - ROC curve plot
 
-## Notes & ethics
+## Extending the system
 
-This is a demo for educational purposes only. Not financial advice. Small samples and simplified features. Real deployments need robust data cleaning, more features, and thorough validation.
+The code includes stubs for future enhancements:
 
-## Future work
+- **FastAPI service**: `app/api/schemas.py` has Pydantic models ready for a REST API
+- **Streaming**: `app/infra/streaming_stubs.py` shows how to wire in Kafka/Redis consumers
+- **ONNX export**: `app/serve/export_onnx.py` is a placeholder for model optimization
 
-- FastAPI microservice with Pydantic request/response models
-- Kafka/Redis consumers for real-time feeds
-- ONNX export and accelerated inference
-- Richer microstructure features and cross-asset signals
+The architecture makes it easy to swap in better sentiment models, add more features, or connect to live data feeds.
 
-## License
+## Requirements
 
-See `LICENSE`.
+Everything runs on CPU and doesn't need much memory. The main dependencies are:
+
+- `transformers` and `torch` for FinBERT
+- `scikit-learn` for the classifier
+- `yfinance` for price data
+- `mlflow` for experiment tracking
+- `pandas` and `numpy` for data handling
+
+See `requirements.txt` for the full list.

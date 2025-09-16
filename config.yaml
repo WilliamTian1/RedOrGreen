@@ -14,7 +14,7 @@ features:
 
 # Modeling
 model:
-  type: logistic_regression  # logistic_regression | random_forest
+  type: logistic_regression # logistic_regression | random_forest
   logistic_regression:
     C: 1.0
     penalty: l2
@@ -27,7 +27,7 @@ model:
 # Training
 train:
   test_size: 0.25
-  val_size: 0.0  # not used in baseline
+  val_size: 0.0 # not used in baseline
 
 # Data
 paths:
@@ -40,5 +40,3 @@ yfinance_offline: false
 # CLI defaults
 cli:
   default_ticker: AAPL
-
-
