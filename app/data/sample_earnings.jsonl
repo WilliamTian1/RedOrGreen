@@ -1,0 +1,20 @@
+{"ticker": "AAPL", "text": "AAPL: iPhone demand exceeded expectations in Q3", "label": "UP"}
+{"ticker": "MSFT", "text": "MSFT: Azure growth slowed sequentially, guidance cautious", "label": "DOWN"}
+{"ticker": "GOOGL", "text": "GOOGL: Advertising rebound led to revenue beat", "label": "UP"}
+{"ticker": "AMZN", "text": "AMZN: Operating income narrowed; uncertainty around consumer demand", "label": "DOWN"}
+{"ticker": "META", "text": "META: Raised Q4 guidance on strong engagement", "label": "UP"}
+{"ticker": "NFLX", "text": "NFLX: Subscriber additions missed estimates", "label": "DOWN"}
+{"ticker": "TSLA", "text": "TSLA: Record deliveries and margin expansion", "label": "UP"}
+{"ticker": "JPM", "text": "JPM: Trading revenue soft; higher credit loss provisions", "label": "DOWN"}
+{"ticker": "XOM", "text": "XOM: Refining margins improved driving earnings beat", "label": "UP"}
+{"ticker": "PFE", "text": "PFE: COVID product sales declined more than expected", "label": "DOWN"}
+{"ticker": "NVDA", "text": "NVDA: Data center demand continues to surge; guidance raised", "label": "UP"}
+{"ticker": "ORCL", "text": "ORCL: Cloud growth offset by license revenue weakness", "label": "DOWN"}
+{"ticker": "INTC", "text": "INTC: Cost controls improved margins; PC market stabilizing", "label": "UP"}
+{"ticker": "BA", "text": "BA: Delivery delays and higher costs pressured results", "label": "DOWN"}
+{"ticker": "WMT", "text": "WMT: Grocery strength and traffic drove a sales beat", "label": "UP"}
+{"ticker": "TGT", "text": "TGT: Shrink and discretionary weakness weighed on margins", "label": "DOWN"}
+{"ticker": "KO", "text": "KO: Price increases held, volumes steady", "label": "UP"}
+{"ticker": "PG", "text": "PG: FX headwinds and input costs pressured earnings", "label": "DOWN"}
+
+

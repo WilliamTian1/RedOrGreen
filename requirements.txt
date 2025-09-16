@@ -1,0 +1,15 @@
+pandas
+numpy
+scikit-learn
+yfinance
+transformers
+torch
+peft
+accelerate
+mlflow
+pytest
+pyyaml
+pydantic
+tqdm
+rich
+matplotlib

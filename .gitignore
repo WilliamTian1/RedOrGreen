@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+.venv/
+venv/
+env/
+
+# OS / tools
+.DS_Store
+.idea/
+.vscode/
+.pytest_cache/
+*.log
+
+# Project artifacts
+mlruns/
+artifacts/
+reports/
+
+# Byte-compiled / cache
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+
+

@@ -1,0 +1,37 @@
+ticker,company,sector
+AAPL,Apple Inc.,Technology
+MSFT,Microsoft Corp.,Technology
+GOOGL,Alphabet Inc.,Technology
+AMZN,Amazon.com Inc.,Consumer Discretionary
+META,Meta Platforms Inc.,Technology
+NFLX,Netflix Inc.,Communication Services
+TSLA,Tesla Inc.,Consumer Discretionary
+JPM,JPMorgan Chase & Co.,Financials
+BAC,Bank of America Corp.,Financials
+WFC,Wells Fargo & Co.,Financials
+XOM,Exxon Mobil Corp.,Energy
+CVX,Chevron Corp.,Energy
+PFE,Pfizer Inc.,Healthcare
+JNJ,Johnson & Johnson,Healthcare
+UNH,UnitedHealth Group Inc.,Healthcare
+NVDA,NVIDIA Corp.,Technology
+ORCL,Oracle Corp.,Technology
+INTC,Intel Corp.,Technology
+BA,Boeing Co.,Industrials
+CAT,Caterpillar Inc.,Industrials
+GE,General Electric Co.,Industrials
+WMT,Walmart Inc.,Consumer Staples
+TGT,Target Corp.,Consumer Discretionary
+KO,Coca-Cola Co.,Consumer Staples
+PEP,PepsiCo Inc.,Consumer Staples
+PG,Procter & Gamble Co.,Consumer Staples
+NKE,Nike Inc.,Consumer Discretionary
+MCD,McDonald's Corp.,Consumer Discretionary
+VZ,Verizon Communications Inc.,Communication Services
+T,AT&T Inc.,Communication Services
+NEE,NextEra Energy Inc.,Utilities
+DUK,Duke Energy Corp.,Utilities
+SO,Southern Co.,Utilities
+
+
+
