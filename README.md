@@ -1,6 +1,6 @@
 # Sector-Aware Earnings Analyzer (CLI)
 
-End-to-end, production-lean command-line project combining finance-domain transformers (FinBERT), simple market features, and a supervised classifier to predict next-day stock moves from brief earnings snippets. Designed to showcase MLE skills and an easy path toward Quant Dev systems.
+End-to-end, production-lean command-line project combining finance-domain transformers (FinBERT), simple market features, and a supervised classifier to predict next-day stock moves from brief earnings snippets.
 
 ## Why it matters
 
