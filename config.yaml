@@ -1,6 +1,6 @@
 # Configuration for Sector-Aware Earnings Analyzer
 seed: 42
-use_lora: false
+use_lora: true
 use_wandb: false
 experiment_name: earnings-analyzer
 mlflow_tracking_uri: ./mlruns
