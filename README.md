@@ -2,12 +2,7 @@
 
 End-to-end, production-lean command-line project combining finance-domain transformers (FinBERT), simple market features, and a supervised classifier to predict next-day stock moves from brief earnings snippets.
 
-## Why it matters
-
-- MLE: deterministic pipeline, configs, experiment tracking (MLflow), tests, packaging.
-- Quant Dev: clean modular code, low-latency CLI, market data ingestion, stubs for real-time infra and ONNX export.
-
-## Features (at a glance)
+## Features
 
 - Transformers: FinBERT sentiment (label, confidence, logits) with offline heuristic fallback
 - Optional LoRA/PEFT fine-tune (skips gracefully without GPU)
