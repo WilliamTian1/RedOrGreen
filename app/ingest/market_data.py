@@ -34,8 +34,8 @@ def compute_price_features(df: Optional[pd.DataFrame], lookback_days: int = 5) -
         return 0.0, 0.0
     log_ret = np.log(px).diff().dropna()
     window = log_ret[-lookback_days:]
-    ret_5d = float(window.sum())
-    vol_5d = float(window.std(ddof=1))
+    ret_5d = float(window.sum().iloc[0] if hasattr(window.sum(), 'iloc') else window.sum())
+    vol_5d = float(window.std(ddof=1).iloc[0] if hasattr(window.std(ddof=1), 'iloc') else window.std(ddof=1))
     if not np.isfinite(ret_5d):
         ret_5d = 0.0
     if not np.isfinite(vol_5d):

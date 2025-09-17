@@ -52,12 +52,17 @@ class FinBERTSentiment:
             scores = self._pipe(text)[0]
             # scores is a list of dicts like [{'label': 'positive', 'score': 0.7}, ...]
             label_scores: Dict[str, float] = {s["label"].lower(): float(s["score"]) for s in scores}
-            labels = [s["label"].lower() for s in scores]
-            logits = [float(s["score"]) for s in scores]
-            # normalize just in case
-            logits = list((np.array(logits) / (np.sum(logits) + 1e-9)).tolist())
             best_label = max(label_scores, key=label_scores.get)
-            return SentimentOutput(label=best_label, score=float(label_scores[best_label]), logits=logits)
+            best_score = label_scores[best_label]
+            
+            # Create logits array in consistent order [negative, neutral, positive]
+            logits = [
+                label_scores.get("negative", 0.0),
+                label_scores.get("neutral", 0.0), 
+                label_scores.get("positive", 0.0)
+            ]
+            
+            return SentimentOutput(label=best_label, score=best_score, logits=logits)
         # offline heuristic fallback
         return self._heuristic(text)
 
