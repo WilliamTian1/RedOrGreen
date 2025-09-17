@@ -1,4 +1,4 @@
-# Earnings Sentiment Analyzer
+# Red||Green: Earnings Sentiment Analyzer
 
 Disclaimer: Don't use this for actual trading! It's meant to demonstrate ML engineering practices, not produce alpha.
 
