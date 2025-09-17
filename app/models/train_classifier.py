@@ -30,7 +30,7 @@ class TrainedModel:
 
 def train_and_evaluate(
     X: np.ndarray,
-    y: np.ndarray,
+    y: Optional[np.ndarray],
     feature_names: List[str],
     model_cfg: Dict,
     artifacts_dir: str,
@@ -39,6 +39,19 @@ def train_and_evaluate(
 ) -> Tuple[TrainedModel, Dict[str, float]]:
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "./mlruns"))
     mlflow.set_experiment(experiment_name)
+
+    if y is None:
+        logger.warning("No labels provided - cannot train classifier. Skipping training.")
+        # Return dummy model for inference-only mode
+        from sklearn.dummy import DummyClassifier
+        dummy_model = DummyClassifier(strategy="constant", constant=0)
+        dummy_model.fit(X[:1], [0])  # Fit on single sample
+        return TrainedModel(
+            model=dummy_model,
+            y_test=np.array([]),
+            y_pred=np.array([]),
+            y_proba=np.array([])
+        ), {"accuracy": 0.0, "f1": 0.0, "roc_auc": 0.0}
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, stratify=y, random_state=42)
 

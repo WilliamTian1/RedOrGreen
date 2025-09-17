@@ -12,6 +12,7 @@ import pandas as pd
 from app.utils.config import load_config, set_seeds
 from app.utils.logging import get_logger
 from app.ingest.load_text import load_jsonl
+from app.ingest.news_feeds import aggregate_live_news, save_live_news_cache, load_live_news_cache
 from app.features.build_features import (
     build_features,
     load_ticker_sector_map,
@@ -24,11 +25,25 @@ from app.models.lora_finetune import maybe_lora_finetune
 logger = get_logger(__name__)
 
 
-def ingest_samples(path: str) -> pd.DataFrame:
+def ingest_samples(path: str, use_live_news: bool = False, newsapi_key: Optional[str] = None) -> pd.DataFrame:
+    """Load samples from file or live news sources."""
+    if use_live_news:
+        logger.info("Fetching live news data...")
+        df = aggregate_live_news(newsapi_key=newsapi_key)
+        if not df.empty:
+            save_live_news_cache(df)
+            return df
+        else:
+            logger.warning("Live news fetch failed, trying cache...")
+            df = load_live_news_cache()
+            if not df.empty:
+                return df
+            logger.warning("No cached news, falling back to sample data")
+    
     return load_jsonl(path)
 
 
-def run_pipeline(use_lora: Optional[bool] = None, limit_samples: int = 0) -> None:
+def run_pipeline(use_lora: Optional[bool] = None, limit_samples: int = 0, use_live_news: bool = False) -> None:
     cfg = load_config()
     set_seeds(cfg.seed)
 
@@ -48,7 +63,12 @@ def run_pipeline(use_lora: Optional[bool] = None, limit_samples: int = 0) -> Non
         maybe_lora_finetune(enabled=True)
 
     # Ingest
-    df = ingest_samples(cfg.paths["sample_earnings"])
+    newsapi_key = os.getenv("NEWSAPI_KEY")
+    df = ingest_samples(
+        cfg.paths["sample_earnings"], 
+        use_live_news=use_live_news,
+        newsapi_key=newsapi_key
+    )
     if limit_samples and limit_samples > 0:
         df = df.head(limit_samples)
     logger.info(f"Loaded {len(df)} samples.")
@@ -92,10 +112,11 @@ def main():
     parser = argparse.ArgumentParser(description="Run training pipeline")
     parser.add_argument("--use_lora", type=str, default="false", help="true/false to enable LoRA")
     parser.add_argument("--limit_samples", type=int, default=0, help="Limit number of samples for quick runs")
+    parser.add_argument("--live_news", action="store_true", help="Fetch live news instead of using sample data")
     args = parser.parse_args()
 
     use_lora = args.use_lora.lower() in {"1", "true", "yes", "on"}
-    run_pipeline(use_lora=use_lora, limit_samples=args.limit_samples)
+    run_pipeline(use_lora=use_lora, limit_samples=args.limit_samples, use_live_news=args.live_news)
 
 
 if __name__ == "__main__":

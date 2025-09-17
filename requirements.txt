@@ -14,3 +14,6 @@ pydantic
 tqdm
 rich
 matplotlib
+requests
+beautifulsoup4
+lxml

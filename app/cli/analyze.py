@@ -83,7 +83,11 @@ def analyze(text: str) -> str:
     sector_ohe = sector_encoder.transform(pd.DataFrame({"sector": [sector]}))
     X = np.hstack([num_scaled, sector_ohe])
 
-    proba = float(model.predict_proba(X)[0, 1])
+    proba_array = model.predict_proba(X)[0]
+    if len(proba_array) > 1:
+        proba = float(proba_array[1])  # UP probability
+    else:
+        proba = 0.5  # Default when no trained model available
     pred = "UP" if proba >= 0.5 else "DOWN"
 
     out = (
